@@ -12,7 +12,7 @@ st.set_page_config(page_title="Conscious Bridge Labs", layout="centered")
 # Gemini setup
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 #model = genai.GenerativeModel("gemini-pro")
-model = genai.GenerativeModel("gemini-1.5-flash-latest")
+model = genai.GenerativeModel("gemini-1.0-pro")
 
 # ---------------- BRANDING ----------------
 st.markdown("""
