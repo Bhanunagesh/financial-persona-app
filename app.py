@@ -11,7 +11,8 @@ st.set_page_config(page_title="Conscious Bridge Labs", layout="centered")
 
 # Gemini setup
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-model = genai.GenerativeModel("gemini-pro")
+#model = genai.GenerativeModel("gemini-pro")
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 # ---------------- BRANDING ----------------
 st.markdown("""
@@ -47,7 +48,7 @@ def generate_ai_advice(data):
     Keep it practical and human.
     """
 
-    response = model.generate_content(prompt)
+    response = model.generate_content("Explain financial stress simply")
     return response.text
 
 
