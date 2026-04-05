@@ -10,7 +10,7 @@ API_URL = "https://financial-api-751405119196.asia-south1.run.app"
 st.set_page_config(page_title="Conscious Bridge Labs", layout="centered")
 
 # Gemini setup
-genai.configure(api_key=st.secrets["2Wkg"])
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 model = genai.GenerativeModel("gemini-pro")
 
 # ---------------- BRANDING ----------------
