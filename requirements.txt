@@ -3,3 +3,4 @@ requests
 numpy
 matplotlib
 google-generativeai
+openai>=1.0.0
