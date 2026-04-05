@@ -2,7 +2,8 @@ import streamlit as st
 import requests
 import numpy as np
 import matplotlib.pyplot as plt
-import google.generativeai as genai
+#import google.generativeai as genai
+from openai import OpenAI
 
 # ---------------- CONFIG ----------------
 API_URL = "https://financial-api-751405119196.asia-south1.run.app"
@@ -13,6 +14,8 @@ st.set_page_config(page_title="Conscious Bridge Labs", layout="centered")
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 #model = genai.GenerativeModel("gemini-pro")
 model = genai.GenerativeModel("gemini-1.0-pro")
+# OpenAI Setup
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # ---------------- BRANDING ----------------
 st.markdown("""
@@ -33,23 +36,38 @@ def get_color(persona):
         return "blue"
 
 
-def generate_ai_advice(data):
+#def generate_ai_advice(data):
+    #prompt = f"""
+    #You are a financial behavior expert.
+
+    #User Profile:
+    #- Persona: {data['persona']}
+    #- Financial Health: {data['financial_health']}
+    #- Stress Score: {data['stress_score']}
+    #- Engagement: {data['engagement_score']}
+    #- Goal Alignment: {data['goal_alignment']}
+
+    #Give personalized financial advice in 3-4 bullet points.
+    #Keep it practical and human.
+    #"""
+def generate_ai_insight(data):
     prompt = f"""
-    You are a financial behavior expert.
+    User financial profile:
+    - Health: {data.get('financial_health')}
+    - Stress: {data.get('stress_score')}
+    - Engagement: {data.get('engagement_score')}
+    - Goals: {data.get('goal_alignment')}
 
-    User Profile:
-    - Persona: {data['persona']}
-    - Financial Health: {data['financial_health']}
-    - Stress Score: {data['stress_score']}
-    - Engagement: {data['engagement_score']}
-    - Goal Alignment: {data['goal_alignment']}
-
-    Give personalized financial advice in 3-4 bullet points.
-    Keep it practical and human.
+    Give a short personalized financial advice.
     """
+    #response = model.generate_content("Explain financial stress simply")
+    #return response.text
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response.choices[0].message.content
 
-    response = model.generate_content("Explain financial stress simply")
-    return response.text
 
 
 def plot_radar(data):
@@ -129,6 +147,7 @@ if st.button("Analyze User"):
 
                 # AI Advice
                 st.markdown("### 🤖 AI Financial Coach")
+                st.success(generate_ai_insight(data))
 
                 with st.spinner("Generating AI advice..."):
                     advice = generate_ai_advice(data)
