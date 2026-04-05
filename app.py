@@ -153,8 +153,8 @@ if st.button("Analyze User"):
                  #   advice = generate_ai_advice(data)
                   #  st.success(advice)
                 with st.spinner("Analyzing behavioral patterns..."):
-                insight = generate_ai_insight(data)
-                st.success(insight)
+                     insight = generate_ai_insight(data)
+                     st.success(insight)
 
                 # Explanation
                 st.markdown("### 🧭 Conscious Bridge Insight Engine")
