@@ -3,7 +3,7 @@ import requests
 import numpy as np
 import matplotlib.pyplot as plt
 #import google.generativeai as genai
-from openai import OpenAI
+import OpenAI as 
 
 # ---------------- CONFIG ----------------
 API_URL = "https://financial-api-751405119196.asia-south1.run.app"
@@ -11,9 +11,9 @@ API_URL = "https://financial-api-751405119196.asia-south1.run.app"
 st.set_page_config(page_title="Conscious Bridge Labs", layout="centered")
 
 # Gemini setup
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+#genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 #model = genai.GenerativeModel("gemini-pro")
-model = genai.GenerativeModel("gemini-1.0-pro")
+#model = genai.GenerativeModel("gemini-1.0-pro")
 # OpenAI Setup
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
@@ -149,9 +149,12 @@ if st.button("Analyze User"):
                 st.markdown("### 🤖 AI Financial Coach")
                 st.success(generate_ai_insight(data))
 
-                with st.spinner("Generating AI advice..."):
-                    advice = generate_ai_advice(data)
-                    st.success(advice)
+                #with st.spinner("Generating AI advice..."):
+                 #   advice = generate_ai_advice(data)
+                  #  st.success(advice)
+                with st.spinner("Analyzing behavioral patterns..."):
+                insight = generate_ai_insight(data)
+                st.success(insight)
 
                 # Explanation
                 st.markdown("### 🧭 Conscious Bridge Insight Engine")
