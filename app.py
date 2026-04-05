@@ -3,7 +3,7 @@
 # =========================
 import streamlit as st
 import requests
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import os
 
 # =========================
@@ -151,19 +151,19 @@ if st.button("Analyze User"):
             # =========================
             # Chart
             # =========================
-            st.markdown("### 📈 Financial Profile")
-
-            labels = ["Health", "Engagement", "Stress", "Goals"]
-            values = [
-                data["financial_health"],
-                data["engagement_score"],
-                data["stress_score"],
-                data["goal_alignment"]
-            ]
-
-            fig, ax = plt.subplots()
-            ax.bar(labels, values)
-            st.pyplot(fig)
+#            st.markdown("### 📈 Financial Profile")
+#
+#           labels = ["Health", "Engagement", "Stress", "Goals"]
+#           values = [
+#                data["financial_health"],
+#                data["engagement_score"],
+#                data["stress_score"],
+#               data["goal_alignment"]
+#           ]
+#
+#           fig, ax = plt.subplots()
+#          ax.bar(labels, values)
+#            st.pyplot(fig)
 
             # =========================
             # AI Advice
