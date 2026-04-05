@@ -1,36 +1,26 @@
-# =========================
-# Imports (ALWAYS at top)
-# =========================
 import streamlit as st
 import requests
-#import matplotlib.pyplot as plt
-import os
+import numpy as np
+import matplotlib.pyplot as plt
+import google.generativeai as genai
 
-# =========================
-# Page Config (ONLY ONCE)
-# =========================
-st.set_page_config(
-    page_title="Conscious Bridge Labs",
-    layout="centered"
-)
-
-# =========================
-# Branding
-# =========================
-if os.path.exists("logo.png"):
-    st.image("logo.png", width=200)
-
-st.title("Conscious Bridge Labs")
-st.caption("Bridging financial behavior, emotion, and intelligence")
-
-# =========================
-# Constants
-# =========================
+# ---------------- CONFIG ----------------
 API_URL = "https://financial-api-751405119196.asia-south1.run.app"
 
-# =========================
-# Helper Functions
-# =========================
+st.set_page_config(page_title="Conscious Bridge Labs", layout="centered")
+
+# Gemini setup
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+model = genai.GenerativeModel("gemini-pro")
+
+# ---------------- BRANDING ----------------
+st.markdown("""
+# 🌉 Conscious Bridge Labs
+### Behavioral Finance Intelligence Platform
+Bridging financial behavior, emotion, and intelligence
+""")
+
+# ---------------- FUNCTIONS ----------------
 def get_color(persona):
     if "At Risk" in persona:
         return "red"
@@ -42,204 +32,164 @@ def get_color(persona):
         return "blue"
 
 
-def predict_risk(data):
-    score = (
-        data["stress_score"] * 0.4 +
-        (100 - data["financial_health"]) * 0.3 +
-        (100 - data["goal_alignment"]) * 0.3
-    )
+def generate_ai_advice(data):
+    prompt = f"""
+    You are a financial behavior expert.
 
-    if score > 70:
-        return "High Risk"
-    elif score > 40:
-        return "Moderate Risk"
-    else:
-        return "Low Risk"
+    User Profile:
+    - Persona: {data['persona']}
+    - Financial Health: {data['financial_health']}
+    - Stress Score: {data['stress_score']}
+    - Engagement: {data['engagement_score']}
+    - Goal Alignment: {data['goal_alignment']}
 
+    Give personalized financial advice in 3-4 bullet points.
+    Keep it practical and human.
+    """
 
-def generate_advice(data):
-    if data["stress_score"] > 70:
-        return "You appear financially stressed. Consider reducing discretionary spending and building a safety buffer."
-    
-    if data["engagement_score"] < 30:
-        return "You are not actively engaging with your finances. Regular tracking can significantly improve outcomes."
-    
-    if data["goal_alignment"] < 40:
-        return "Your financial goals lack alignment. Define clear, measurable milestones."
-
-    return "You are on a stable financial path. Consider long-term wealth creation strategies."
+    response = model.generate_content(prompt)
+    return response.text
 
 
-@st.cache_data
-def fetch_user(user_id):
-    url = f"{API_URL}/user/{user_id}"
-    response = requests.get(url)
+def plot_radar(data):
+    labels = ["Health", "Engagement", "Stress", "Goals"]
+    values = [
+        data["financial_health"],
+        data["engagement_score"],
+        data["stress_score"],
+        data["goal_alignment"]
+    ]
 
-    if response.status_code != 200:
-        return {"error": "API request failed"}
+    values += values[:1]
 
-    return response.json()
+    angles = np.linspace(0, 2*np.pi, len(labels), endpoint=False).tolist()
+    angles += angles[:1]
+
+    fig, ax = plt.subplots(subplot_kw=dict(polar=True))
+    ax.plot(angles, values)
+    ax.fill(angles, values, alpha=0.1)
+
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(labels)
+
+    return fig
 
 
-# =========================
-# App Title
-# =========================
-st.title("💰 Financial Persona Explorer")
-st.caption("Understand users beyond transactions")
+# ---------------- SIDEBAR DEMO ----------------
+st.sidebar.title("Demo Mode")
+demo_user = st.sidebar.selectbox("Try Sample Users", ["1", "10", "50"])
 
-# =========================
-# User Input
-# =========================
-customer_id = st.text_input("Enter Customer ID", "1")
+# ---------------- MAIN INPUT ----------------
+customer_id = st.text_input("Enter Customer ID", demo_user)
 
-# =========================
-# Analyze Button
-# =========================
 if st.button("Analyze User"):
 
-    with st.spinner("Analyzing user..."):
+    with st.spinner("Fetching user data..."):
 
-        data = fetch_user(customer_id)
+        try:
+            response = requests.get(f"{API_URL}/user/{customer_id}")
+            data = response.json()
 
-        if "error" in data:
-            st.error(data["error"])
-            if "available_sample" in data:
-                st.info(f"Try: {data['available_sample']}")
+            if "error" in data:
+                st.error(data["error"])
+                if "available_sample" in data:
+                    st.info(f"Try: {data['available_sample']}")
 
-        else:
-            st.success("Analysis Complete ✅")
+            else:
+                st.success("Analysis Complete ✅")
 
-            # =========================
-            # Persona
-            # =========================
-            color = get_color(data['persona'])
+                # Persona
+                color = get_color(data['persona'])
 
-            st.markdown(f"""
-            ### 👤 Persona: <span style='color:{color}'>{data['persona']}</span>
-            """, unsafe_allow_html=True)
+                st.markdown(f"""
+                ### 🧬 Financial Identity: <span style='color:{color}'>{data['persona']}</span>
+                """, unsafe_allow_html=True)
 
-            # Insight
-            st.info(f"🧠 {data['insight']}")
+                # Insight
+                st.markdown("### 🧠 Behavioral Insight")
+                st.info(data["insight"])
 
-            st.markdown("---")
+                st.markdown("---")
 
-            # =========================
-            # Metrics
-            # =========================
-            col1, col2, col3, col4 = st.columns(4)
+                # Metrics
+                st.markdown("### 📊 Financial Signals")
 
-            col1.metric("💪 Financial Health", round(data["financial_health"], 2))
-            col2.metric("😰 Stress", round(data["stress_score"], 2))
-            col3.metric("📱 Engagement", round(data["engagement_score"], 2))
-            col4.metric("🎯 Goals", round(data["goal_alignment"], 2))
+                col1, col2, col3, col4 = st.columns(4)
 
-            # =========================
-            # Risk Prediction
-            # =========================
-            risk = predict_risk(data)
+                col1.metric("Health", round(data["financial_health"], 2))
+                col2.metric("Stress", round(data["stress_score"], 2))
+                col3.metric("Engagement", round(data["engagement_score"], 2))
+                col4.metric("Goals", round(data["goal_alignment"], 2))
 
-            st.markdown("### ⚠️ Predicted Financial Risk")
+                # Radar Chart
+                st.markdown("### 📈 Behavioral Radar")
+                fig = plot_radar(data)
+                st.pyplot(fig)
 
-            risk_color = (
-                "red" if risk == "High Risk"
-                else "orange" if risk == "Moderate Risk"
-                else "green"
-            )
+                # AI Advice
+                st.markdown("### 🤖 AI Financial Coach")
 
-            st.markdown(f"**Risk Level:** :{risk_color}[{risk}]")
+                with st.spinner("Generating AI advice..."):
+                    advice = generate_ai_advice(data)
+                    st.success(advice)
 
-            # =========================
-            # Chart
-            # =========================
-#            st.markdown("### 📈 Financial Profile")
-#
-#           labels = ["Health", "Engagement", "Stress", "Goals"]
-#           values = [
-#                data["financial_health"],
-#                data["engagement_score"],
-#                data["stress_score"],
-#               data["goal_alignment"]
-#           ]
-#
-#           fig, ax = plt.subplots()
-#          ax.bar(labels, values)
-#            st.pyplot(fig)
+                # Explanation
+                st.markdown("### 🧭 Conscious Bridge Insight Engine")
+                st.write("""
+                This platform analyzes users across multiple dimensions:
+                - Cash-flow behavior
+                - Emotional relationship with money
+                - Financial resilience
+                - Goal alignment
+                - Engagement patterns
+                """)
 
-            # =========================
-            # AI Advice
-            # =========================
-            st.markdown("### 🤖 AI Financial Coach")
-            st.success(generate_advice(data))
+        except Exception as e:
+            st.error(f"API Error: {e}")
 
-            # =========================
-            # Behavioral Scores
-            # =========================
-            st.markdown("### 📊 Behavioral Scores")
 
-            st.progress(min(max(data["financial_health"] / 100, 0), 1))
-            st.caption("Financial Health")
-
-            st.progress(min(max(data["engagement_score"] / 100, 0), 1))
-            st.caption("Engagement")
-
-            st.progress(min(max(data["stress_score"] / 100, 0), 1))
-            st.caption("Stress")
-
-            # =========================
-            # Explanation
-            # =========================
-            st.markdown("### 🧾 Why this persona?")
-            st.write("""
-            This classification is based on:
-            - Cash flow stability
-            - Behavioral engagement
-            - Emotional indicators
-            - Financial resilience
-            - Goal alignment
-            """)
-
-# =========================
-# Compare Users
-# =========================
+# ---------------- COMPARE USERS ----------------
+st.markdown("---")
 st.markdown("### 🧑‍🤝‍🧑 Compare Users")
 
 user1 = st.text_input("User 1 ID", "1")
 user2 = st.text_input("User 2 ID", "2")
 
-if st.button("Compare"):
+if st.button("Compare Users"):
 
-    d1 = fetch_user(user1)
-    d2 = fetch_user(user2)
+    with st.spinner("Fetching comparison data..."):
 
-    if "error" not in d1 and "error" not in d2:
+        try:
+            d1 = requests.get(f"{API_URL}/user/{user1}").json()
+            d2 = requests.get(f"{API_URL}/user/{user2}").json()
 
-        st.write("### Comparison")
+            if "error" in d1:
+                st.error(f"User {user1}: {d1['error']}")
+                st.stop()
 
-        col1, col2 = st.columns(2)
+            if "error" in d2:
+                st.error(f"User {user2}: {d2['error']}")
+                st.stop()
 
-        with col1:
-            st.write(f"User {user1}")
-            st.write(d1["persona"])
+            st.success("Comparison Loaded ✅")
 
-        with col2:
-            st.write(f"User {user2}")
-            st.write(d2["persona"])
-    else:
-        st.error("Error fetching user data")
+            col1, col2 = st.columns(2)
 
-# =========================
-# Info Section
-# =========================
-st.markdown("### 🧭 Conscious Bridge Insight Engine")
+            with col1:
+                st.markdown(f"### 👤 User {user1}")
+                st.write(f"**Persona:** {d1['persona']}")
+                st.metric("Health", round(d1["financial_health"], 2))
+                st.metric("Stress", round(d1["stress_score"], 2))
+                st.metric("Engagement", round(d1["engagement_score"], 2))
+                st.metric("Goals", round(d1["goal_alignment"], 2))
 
-st.write("""
-This platform analyzes users across multiple dimensions:
+            with col2:
+                st.markdown(f"### 👤 User {user2}")
+                st.write(f"**Persona:** {d2['persona']}")
+                st.metric("Health", round(d2["financial_health"], 2))
+                st.metric("Stress", round(d2["stress_score"], 2))
+                st.metric("Engagement", round(d2["engagement_score"], 2))
+                st.metric("Goals", round(d2["goal_alignment"], 2))
 
-- Cash-flow behavior
-- Emotional relationship with money
-- Financial resilience
-- Goal alignment
-- Engagement patterns
-
-Unlike traditional systems, this creates a **holistic financial identity**.
-""")
+        except Exception as e:
+            st.error(f"Comparison failed: {e}")
