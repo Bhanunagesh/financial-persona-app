@@ -3,7 +3,7 @@ import requests
 import numpy as np
 import matplotlib.pyplot as plt
 #import google.generativeai as genai
-import OpenAI 
+from openai import OpenAI 
 
 # ---------------- CONFIG ----------------
 API_URL = "https://financial-api-751405119196.asia-south1.run.app"
